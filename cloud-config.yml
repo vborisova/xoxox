@@ -1,0 +1,37 @@
+
+#cloud-config
+
+users:
+  - name: core
+ssh_authorized_keys:
+  - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDSyyXJ6mvcFY56Wu8Mcx7B8KtXIq1hVaQ2N6oi36breUl17iE0kRYxFELBammb2l1d54TJZd7ERZTioxRveU/ibaC6djB8q/4zbxgGjVuJVzu2DU347q20GMUwz2jfuOBtYaSp5wfx5PSb+Dt43HTP0KZkE0wh66E3IciHt4fu/1DjQAta4FRaySzlORB/iboXuII0FZ9HSTXAns3CoRQBqgKYWFKMf4KnSdjLwOXl1PHnIawtz+J9oug8Dwer0B92iXlG+PPKgw01RQedLFOQ8trldjJOjWBllDHIswNZOZ8mh9qjvn51KA/k5o4/YgerGU9azEVIOJNRJ7NDXGjt core@localhost
+
+coreos:
+  etcd2:
+    discovery: https://discovery.etcd.io/7f196af1ef3fa1209acc20fb9e29c9bf
+    advertise-client-urls: http://10.27.96.165:2379, http://10.27.96.165:4001
+    initial-advertise-peer-urls: http://$private_ipv4:2380
+    listen-client-urls: http://0.0.0.0:2379, http://0.0.0.0:4001
+    listen-peer-urls: http://10.27.96.165:2380 
+  units:
+    -name: etcd2.service
+      command: start
+    -name: fleet.service
+      command: start
+    - name: vmtoolsd.service
+      command: start
+      content: |
+        [Unit]
+        Description=VMware Tools Agent
+        Documentation=http://open-vm-tools.sourceforge.net/
+        ConditionVirtualization=vmware
+
+        [Service]
+        ExecStartPre=/usr/bin/ln -sfT /usr/share/oem/vmware-tools /etc/vmware-tools
+        ExecStart=/usr/share/oem/bin/vmtoolsd
+        TimeoutStopSec=5
+  oem:
+    bug-report-url: "https://github.com/coreos/bugs/issues"
+    id: vmware
+    name: VMWare
+    version-id: "9.10.0"
